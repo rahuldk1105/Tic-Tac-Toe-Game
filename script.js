@@ -1,89 +1,100 @@
-const X_CLASS = 'x'
-const CIRCLE_CLASS = 'circle'
-const WINNING_COMBINATIONS = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6]
-]
-const cellElements = document.querySelectorAll('[data-cell]')
-const board = document.getElementById('board')
-const winningMessageElement = document.getElementById('winningMessage')
-const restartButton = document.getElementById('restartButton')
-const winningMessageTextElement = document.querySelector('[data-winning-message-text]')
-let circleTurn
+let spots = document.querySelectorAll('.spot');
+spots = Array.from(spots);
+let playerOne = [];
+let playerTwo = [];
+let pOneScore = 0;
+let pTwoScore = 0;
+let spanScore1 = document.querySelector('.p-one');
+let spanScore2 = document.querySelector('.p-two');
+let gameOverDiv = document.querySelector('.game-over');
+let j = 0;
+let won = false;
 
-startGame()
+console.log(spanScore1);
+console.log(spanScore2);
 
-restartButton.addEventListener('click', startGame)
+let checkWinner = (moves) => {
+  let win = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [3, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ]
 
-function startGame() {
-  circleTurn = false
-  cellElements.forEach(cell => {
-    cell.classList.remove(X_CLASS)
-    cell.classList.remove(CIRCLE_CLASS)
-    cell.removeEventListener('click', handleClick)
-    cell.addEventListener('click', handleClick, { once: true })
-  })
-  setBoardHoverClass()
-  winningMessageElement.classList.remove('show')
-}
+  let winHappened = false;
+  for (let i = 0; i < win.length; i++) {
+    if (
+      moves.includes(win[i][0])
+      && moves.includes(win[i][1])
+      && moves.includes(win[i][2])
+    ) {
 
-function handleClick(e) {
-  const cell = e.target
-  const currentClass = circleTurn ? CIRCLE_CLASS : X_CLASS
-  placeMark(cell, currentClass)
-  if (checkWin(currentClass)) {
-    endGame(false)
-  } else if (isDraw()) {
-    endGame(true)
-  } else {
-    swapTurns()
-    setBoardHoverClass()
+      winHappened = true;
+    }
   }
-}
+  return winHappened;
+};
 
-function endGame(draw) {
-  if (draw) {
-    winningMessageTextElement.innerText = 'Draw!'
-  } else {
-    winningMessageTextElement.innerText = `${circleTurn ? "O's" : "X's"} Wins!`
+let resetGame = () => {
+  for (let i = 0; i < spots.length; i++) {
+    spots[i].classList.remove('spot-x');
+    spots[i].classList.remove('flip-x');
+    spots[i].classList.remove('spot-o');
+    spots[i].classList.remove('flip-o');
   }
-  winningMessageElement.classList.add('show')
-}
+  playerOne = [];
+  playerTwo = [];
+  j = 0;
+  won = false;
+};
 
-function isDraw() {
-  return [...cellElements].every(cell => {
-    return cell.classList.contains(X_CLASS) || cell.classList.contains(CIRCLE_CLASS)
-  })
-}
+let gameOver = () => {
+    gameOverDiv.style.display = 'block';
+    setTimeout(() => {
+      resetGame();
+      gameOverDiv.style.display = 'none';
+    }, 1500);
+};
 
-function placeMark(cell, currentClass) {
-  cell.classList.add(currentClass)
-}
+for (let i = 0; i < spots.length; i++) {
+  spots[i].addEventListener('click', function() {
+    // console.log(this);
+    if (!(this.classList.contains('spot-x')) && !(this.classList.contains('spot-o'))) {
+      if (j % 2 === 0) {
+        this.classList.add('spot-x');
+        this.classList.add('flip-x');
+        playerOne.push(spots.indexOf(this));
+        // console.log(playerOne);
 
-function swapTurns() {
-  circleTurn = !circleTurn
-}
-
-function setBoardHoverClass() {
-  board.classList.remove(X_CLASS)
-  board.classList.remove(CIRCLE_CLASS)
-  if (circleTurn) {
-    board.classList.add(CIRCLE_CLASS)
-  } else {
-    board.classList.add(X_CLASS)
-  }
-}
-
-function checkWin(currentClass) {
-  return WINNING_COMBINATIONS.some(combination => {
-    return combination.every(index => {
-      return cellElements[index].classList.contains(currentClass)
-    })
-  })
+      } else {
+        this.classList.add('spot-o');
+        this.classList.add('flip-o');
+        playerTwo.push(spots.indexOf(this));
+        // console.log(playerTwo);
+      }
+      if (j % 2 === 0) {
+        if (checkWinner(playerOne)) {
+          pOneScore++;
+          spanScore1.innerHTML = pOneScore;
+          setTimeout(resetGame, 350);
+          won = true
+        }
+      } else {
+        if (checkWinner(playerTwo)) {
+          pTwoScore++;
+          spanScore2.innerHTML = pTwoScore;
+          setTimeout(resetGame, 350);
+          won = true
+        }
+      }
+      j++;
+      if (j === 9 && !won) {
+        gameOver();
+      }
+    }
+  });
 }
